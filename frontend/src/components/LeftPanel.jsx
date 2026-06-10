@@ -10,6 +10,7 @@ export default function LeftPanel({ onSelect }) {
   const [addId, setAddId] = useState('');
   const [addError, setAddError] = useState('');
   const filterRef = useRef('');
+  const debounceRef = useRef(null);
 
   const load = useCallback(async (p, f) => {
     const data = await fetchItems(p, 20, f);
@@ -39,8 +40,11 @@ export default function LeftPanel({ onSelect }) {
     const val = e.target.value;
     setFilter(val);
     filterRef.current = val;
-    setPage(1);
-    load(1, val);
+    clearTimeout(debounceRef.current);
+    debounceRef.current = setTimeout(() => {
+      setPage(1);
+      load(1, val);
+    }, 300);
   }, [load]);
 
   const handleLoadMore = useCallback(async () => {
@@ -51,7 +55,7 @@ export default function LeftPanel({ onSelect }) {
 
   const handleSelect = useCallback((id) => {
     queue.enqueueSelect(id);
-    setItems(prev => prev.filter(i => i !== id));
+    setItems(prev => prev.filter(i => Number(i) !== Number(id)));
     onSelect(id);
   }, [onSelect]);
 

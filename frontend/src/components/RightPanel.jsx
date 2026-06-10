@@ -56,6 +56,7 @@ export default function RightPanel({ onDeselect: onDeselectProp }) {
   const [hasMore, setHasMore] = useState(false);
   const [filter, setFilter] = useState('');
   const filterRef = useRef('');
+  const debounceRef = useRef(null);
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 5 } })
@@ -88,8 +89,11 @@ export default function RightPanel({ onDeselect: onDeselectProp }) {
     const val = e.target.value;
     setFilter(val);
     filterRef.current = val;
-    setPage(1);
-    load(1, val);
+    clearTimeout(debounceRef.current);
+    debounceRef.current = setTimeout(() => {
+      setPage(1);
+      load(1, val);
+    }, 300);
   }, [load]);
 
   const handleLoadMore = useCallback(async () => {
@@ -100,7 +104,7 @@ export default function RightPanel({ onDeselect: onDeselectProp }) {
 
   const handleDeselect = useCallback((id) => {
     queue.enqueueDeselect(id);
-    setItems(prev => prev.filter(i => i !== id));
+    setItems(prev => prev.filter(i => Number(i) !== Number(id)));
     onDeselectProp(id);
   }, [onDeselectProp]);
 
@@ -110,17 +114,22 @@ export default function RightPanel({ onDeselect: onDeselectProp }) {
     const toIndex = items.findIndex(id => String(id) === over.id);
     if (fromIndex === -1 || toIndex === -1) return;
 
-    // Optimistic local update
+    const snapshot = [...items];
     setItems(prev => arrayMove(prev, fromIndex, toIndex));
 
-    // Send to server with filteredIds if filter is active
-    const filteredIds = filterRef.current ? items : null;
-    await queue.reorder(fromIndex, toIndex, filteredIds);
+    const filteredIds = filterRef.current ? snapshot : null;
+    try {
+      await queue.reorder(fromIndex, toIndex, filteredIds);
+    } catch {
+      setItems(snapshot);
+    }
   }, [items]);
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', height: '100%', padding: 12, boxSizing: 'border-box' }}>
-      <h3 style={{ margin: '0 0 8px', fontSize: 15 }}>Selected ({items.length})</h3>
+      <h3 style={{ margin: '0 0 8px', fontSize: 15 }}>
+        Selected{filter ? ` (showing ${items.length})` : ` (${items.length}${hasMore ? '+' : ''})`}
+      </h3>
 
       <input
         type="text"
