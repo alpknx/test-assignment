@@ -7,6 +7,10 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
+app.get('/', (req, res) => {
+  res.json({ status: 'ok', app: 'test-assignment API', endpoints: ['/api/items', '/api/selected', '/api/select', '/api/deselect', '/api/items (POST)', '/api/selected/order'] });
+});
+
 app.get('/api/items', (req, res) => {
   const page = Math.max(1, Math.min(50000, parseInt(req.query.page) || 1));
   const limit = Math.max(1, Math.min(100, parseInt(req.query.limit) || 20));
