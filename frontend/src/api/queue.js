@@ -7,8 +7,14 @@ class RequestQueue {
     this.pendingSelect = new Set();
     this.pendingDeselect = new Set();
 
-    setInterval(() => this._flushModify(), 1000);
-    setInterval(() => this._flushAdd(), 10_000);
+    this._modifyTimer = setInterval(() => this._flushModify(), 1000);
+    this._addTimer = setInterval(() => this._flushAdd(), 10_000);
+    this._addFlushing = false;
+  }
+
+  destroy() {
+    clearInterval(this._modifyTimer);
+    clearInterval(this._addTimer);
   }
 
   enqueueAdd(id) {
@@ -52,7 +58,8 @@ class RequestQueue {
   }
 
   async _flushAdd() {
-    if (this.pendingAdd.size === 0) return;
+    if (this._addFlushing || this.pendingAdd.size === 0) return;
+    this._addFlushing = true;
     const ids = [...this.pendingAdd.keys()];
     this.pendingAdd.clear();
     for (const id of ids) {
@@ -62,6 +69,7 @@ class RequestQueue {
         body: JSON.stringify({ id }),
       }).catch(console.error);
     }
+    this._addFlushing = false;
   }
 
   async reorder(fromIndex, toIndex, filteredIds = null) {
