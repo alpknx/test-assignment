@@ -3,13 +3,8 @@ import LeftPanel from './components/LeftPanel';
 import RightPanel from './components/RightPanel';
 
 export default function App() {
-  const handleSelect = useCallback(() => {
-    window.dispatchEvent(new Event('selected-changed'));
-  }, []);
-
-  const handleDeselect = useCallback(() => {
-    window.dispatchEvent(new Event('selected-changed'));
-  }, []);
+  const handleSelect = useCallback(() => {}, []);
+  const handleDeselect = useCallback(() => {}, []);
 
   return (
     <div style={{

@@ -37,6 +37,7 @@ class RequestQueue {
   }
 
   async _flushModify() {
+    let changed = false;
     if (this.pendingSelect.size > 0) {
       const ids = [...this.pendingSelect];
       this.pendingSelect.clear();
@@ -45,6 +46,7 @@ class RequestQueue {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ ids }),
       }).catch(console.error);
+      changed = true;
     }
     if (this.pendingDeselect.size > 0) {
       const ids = [...this.pendingDeselect];
@@ -54,6 +56,10 @@ class RequestQueue {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ ids }),
       }).catch(console.error);
+      changed = true;
+    }
+    if (changed) {
+      window.dispatchEvent(new Event('selected-changed'));
     }
   }
 
