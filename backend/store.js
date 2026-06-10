@@ -25,27 +25,53 @@ function getUnselected(page, limit, filter) {
   const results = [];
   let count = 0;
 
+  if (!filter) {
+    let selectedBaseCount = 0;
+    for (const id of selectedSet) {
+      if (id >= MIN_ID && id <= MAX_ID) selectedBaseCount++;
+    }
+    let selectedCustomCount = 0;
+    for (const id of customItemSet) {
+      if (selectedSet.has(id)) selectedCustomCount++;
+    }
+    const total =
+      MAX_ID - MIN_ID + 1 - selectedBaseCount + (customItemSet.size - selectedCustomCount);
+
+    for (let id = MIN_ID; id <= MAX_ID; id++) {
+      if (selectedSet.has(id)) continue;
+      if (count >= offset && results.length < limit) results.push(id);
+      count++;
+      if (results.length === limit) break;
+    }
+
+    if (results.length < limit) {
+      const sortedCustom = [...customItemSet].sort((a, b) => a - b);
+      for (const id of sortedCustom) {
+        if (selectedSet.has(id)) continue;
+        if (count >= offset && results.length < limit) results.push(id);
+        count++;
+      }
+    }
+
+    return { items: results, total, hasMore: total > page * limit };
+  }
+
   for (let id = MIN_ID; id <= MAX_ID; id++) {
     if (selectedSet.has(id)) continue;
-    if (filter && !String(id).includes(filter)) continue;
+    if (!String(id).includes(filter)) continue;
     if (count >= offset && results.length < limit) results.push(id);
     count++;
-    if (!filter && results.length === limit) break;
   }
 
   const sortedCustom = [...customItemSet].sort((a, b) => a - b);
   for (const id of sortedCustom) {
     if (selectedSet.has(id)) continue;
-    if (filter && !String(id).includes(filter)) continue;
+    if (!String(id).includes(filter)) continue;
     if (count >= offset && results.length < limit) results.push(id);
     count++;
   }
 
-  return {
-    items: results,
-    total: count,
-    hasMore: count > page * limit,
-  };
+  return { items: results, total: count, hasMore: count > page * limit };
 }
 
 function getSelected(page, limit, filter) {
