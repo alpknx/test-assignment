@@ -115,7 +115,8 @@ function reorderSelected(fromIndex, toIndex, filteredIds) {
     const toReal = selectedItems.indexOf(toId);
     if (fromReal === -1 || toReal === -1) return;
     selectedItems.splice(fromReal, 1);
-    selectedItems.splice(toReal, 0, fromId);
+    const adjustedToReal = fromReal < toReal ? toReal - 1 : toReal;
+    selectedItems.splice(adjustedToReal, 0, fromId);
   } else {
     const [item] = selectedItems.splice(fromIndex, 1);
     selectedItems.splice(toIndex, 0, item);
